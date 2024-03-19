@@ -168,7 +168,9 @@ const props = defineProps({
                 }}</span> <span class="text-sm text-gray-400  w-44">Price: ₱{{
                         product.price }}
                                                 Quantity:
-                                                {{ product.quantity }}</span> </div>
+                                                {{ product.quantity - product.cart_count }}</span>
+                                                
+                                             </div>
                                     </div>
                                     <div class="flex flex-col justify-center gap-2">
                                         <span @click="handleEditModalOpen(product.id)"

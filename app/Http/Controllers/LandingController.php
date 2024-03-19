@@ -18,7 +18,7 @@ class LandingController extends Controller
      */
     public function index()
     {
-        $products = Product::paginate(10); // Paginate products
+        $products = Product::withCount('cart')->paginate(10); // Paginate products
 
         $cart = Cart::with('Product')->get()->groupBy('product'); // Group cart items by product
 

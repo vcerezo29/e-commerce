@@ -15,7 +15,7 @@ class AdminController extends Controller
      */
     public function index()
     {
-        $products = Product::all(); // Retrieve all products
+        $products = Product::withCount('cart')->get(); // Retrieve all products
         return Inertia::render('Dashboard', [
             'status' => session('status'), // Get session status
             'products' => $products // Pass products to the view

@@ -16,4 +16,8 @@ class Product extends Model
         'image_path'
     ];
 
+    public function cart () {
+        return $this->hasMany(Cart::class, 'product', 'id');
+    }
+
 }
