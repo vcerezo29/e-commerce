@@ -173,12 +173,13 @@ const props = defineProps({
                                              </div>
                                     </div>
                                     <div class="flex flex-col justify-center gap-2">
-                                        <span @click="handleEditModalOpen(product.id)"
+                                        <span v-if="$page.props.auth.user.roles[0].name === 'admin' || product.owner.length > 0  && $page.props.auth.user.id === product.owner[0].user"    @click="handleEditModalOpen(product.id)"
                                             class="bg-slate-400 hover:bg-slate-600 text-center p-1 rounded text-gray-50">Edit</span>
-                                        <span @click="handleAddImageModalOpen(product.id)"
+                                        
+                                        <span v-if="$page.props.auth.user.roles[0].name === 'admin' || product.owner.length > 0  && $page.props.auth.user.id === product.owner[0].user" @click="handleAddImageModalOpen(product.id)"
                                             class="bg-slate-400 hover:bg-slate-600 text-center p-1 rounded text-gray-50">Add
                                             Photo</span>
-                                        <span @click="handleDeleteModalOpen(product.id)"
+                                        <span v-if="$page.props.auth.user.roles[0].name === 'admin' || product.owner.length > 0  && $page.props.auth.user.id === product.owner[0].user" @click="handleDeleteModalOpen(product.id)"
                                             class="bg-slate-400 hover:bg-slate-600 text-center p-1 rounded text-gray-50">Delete</span>
                                     </div>
                                 </li>

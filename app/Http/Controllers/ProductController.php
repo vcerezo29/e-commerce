@@ -5,14 +5,17 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Requests\ProductUpdateRequest;
 use App\Models\Product;
+use App\Models\UsersProducts;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpParser\Node\Expr\Throw_;
 
 class ProductController extends Controller
 {
@@ -29,6 +32,13 @@ class ProductController extends Controller
             $validated = $request->validated(); // Validate request data
             $imagePath = $request->hasFile('image') ? $request->file('image')->store('image', 'public') : null; // Store image if present
             $product = Product::create($validated + ['image_path' => $imagePath]); // Create new product with image path
+
+            // link the product to the user who created the product
+            $productOwner = UsersProducts::create([
+                'user' => Auth::user()->id,
+                'product' => $product->id
+            ]);
+
             DB::commit(); // Commit transaction if successful
             return back()->with('status', 'New Product Added: ' . $product->name); // Redirect with success message
         } catch (\Exception $e) {
@@ -50,8 +60,22 @@ class ProductController extends Controller
         try {
             $validated = $request->validated(); // Validate request data
             $target = Product::findOrFail($id); // Find the target product
-            $target->fill($validated); // Update product with validated data
-            $target->save(); // Save the updated product
+
+            //check if the auth user has the role of admin nor editor
+            if (Auth::user()->hasRole('admin')) {
+                $target->fill($validated); // Update product with validated data
+                $target->save();
+            } else if (Auth::user()->hasRole('editor')) {
+                //check if the auth user is same the owner of the product
+                if (Auth::user()->id === $target->Owner[0]->user) {
+                    $target->fill($validated); // Update product with validated data
+                    $target->save(); // Save the updated product
+                } else
+                    throw new  Exception("Not Owner"); // return if Not
+
+            } else
+                throw new  Exception("Unable to do this action."); // return if not admin nor editor
+
             DB::commit(); // Commit transaction if successful
             return back()->with('status', 'Saved Product: ' . $target->name); // Redirect with success message
         } catch (\Exception $e) {
@@ -80,7 +104,18 @@ class ProductController extends Controller
             }
 
             $target = Product::findOrFail($id); // Find the target product
-            $imagePath = $request->file('image')->store('image', 'public'); // Store the uploaded image
+
+            //check if the auth user has the role of admin nor editor
+            if (Auth::user()->hasRole('admin')) {
+                $imagePath = $request->file('image')->store('image', 'public'); // Store the uploaded image
+            } else if (Auth::user()->hasRole('editor')) {
+                //check if the auth user is same the owner of the product
+                if (Auth::user()->id === $target->Owner[0]->user) {
+                    $imagePath = $request->file('image')->store('image', 'public');
+                } else
+                    throw new  Exception("Not Owner"); // return if Not
+            } else
+                throw new  Exception("Unable to do this action."); // return if not admin nor editor
 
             $target->image_path = $imagePath; // Update the product's image path
             $target->save(); // Save the changes
@@ -105,12 +140,24 @@ class ProductController extends Controller
         try {
             $target = Product::findOrFail($id); // Find the target product
 
+            //check if the auth user has the role of admin nor editor
+            if (Auth::user()->hasRole('admin')) {
+                $target->delete(); // Delete the product
+            } else if (Auth::user()->hasRole('editor')) {
+                //check if the auth user is same the owner of the product
+                if (Auth::user()->id === $target->Owner[0]->user) {
+                    $target->delete(); // Delete the product
+                } else
+                    throw new  Exception("Not Owner"); // return if Not
+            } else
+                throw new  Exception("Unable to do this action."); // return if not admin nor editor
+
+
             // Check if the product has an associated image and delete it if it exists
             if ($target->image_path !== null && Storage::exists('public/' . $target->image_path)) {
                 Storage::delete('public/' . $target->image_path);
             }
 
-            $target->delete(); // Delete the product
             DB::commit(); // Commit transaction if successful
             return back()->with('status', 'Deleted Product: ' . $target->name); // Redirect with success message
         } catch (\Exception $e) {

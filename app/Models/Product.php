@@ -20,4 +20,8 @@ class Product extends Model
         return $this->hasMany(Cart::class, 'product', 'id');
     }
 
+    public function Owner () {
+        return $this->hasMany(UsersProducts::class, 'product', 'id');
+    }
+
 }
